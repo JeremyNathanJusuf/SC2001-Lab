@@ -2,27 +2,26 @@
 #include <vector>
 using namespace std;
 
-void swap(int& n, int& m) {
-    int temp = n;
-    n = m;
-    m = temp;
-}
-
-void insertionSort(vector<int>& ar, int l, int r) {
-    for (int i=l+1; i<=r; i++) {
-        for (int j=i; j>l; j--) {
+long insertionSort(vector<long>& ar, long l, long r) {
+    long count = 0;
+    for (long i=l+1; i<=r; i++) {
+        for (long j=i; j>l; j--) {
+            count++;
             if (ar[j-1] > ar[j]) 
                 swap(ar[j-1], ar[j]);
             else break;
         }
     }
+    return count;
 }
 
-void merge(vector<int>& ar, int l, int r) {
-    int mid = (l+r)/2;
-    int i=l, j=mid+1;
+long merge(vector<long>& ar, long l, long r) {
+    long count = 0;
+    long mid = (l+r)/2;
+    long i=l, j=mid+1;
 
     while (i <= mid && j <= r) {
+        count++;
         if (ar[i] < ar[j]) i++;
         else if (ar[i] > ar[j]) {
             ar.insert(ar.begin() + i, ar[j]);
@@ -35,32 +34,60 @@ void merge(vector<int>& ar, int l, int r) {
             i+=2; j++; mid++;
         }
     }
+
+    return count;
 }
 
-void hybridSort(vector<int>& ar, int l, int r, int s) {
-    int mid = (l+r)/2;
+void mergeSort(vector<long>& ar, long l, long r, long& count) {
+    long mid = (l+r)/2;
     
-    if (r - l + 1 <= s) insertionSort(ar, l, r);
+    if (r - l <= 0) return;
     else {
-        hybridSort(ar, l, mid, s);
-        hybridSort(ar, mid+1, r, s);
+        mergeSort(ar, l, mid, count);
+        mergeSort(ar, mid+1, r, count);
     }
-    merge(ar, l, r);
+    count += merge(ar, l, r);
+}
+
+void hybridSort(vector<long>& ar, long l, long r, long s, long& count) {
+    long mid = (l+r)/2;
+    
+    if (r - l + 1 <= s) count += insertionSort(ar, l, r);
+    else {
+        hybridSort(ar, l, mid, s, count);
+        hybridSort(ar, mid+1, r, s, count);
+    }
+    count += merge(ar, l, r);
 }
 
 int main() {
-    vector<int> ar = {45, 29, 64, 12, 100, 21, 1000, 32, 21, 21, 101, 989};
-    
+    vector<long> ar = {45, 29, 64, 12, 100, 21, 1000, 32, 21, 21, 101, 989};
+    long size = ar.size();
+    long hybridKeyComp = 0;
+    long mergeKeyComp = 0;
+
     //before sort
-    for (int i : ar)
+    for (long i : ar)
         cout << i << " ";
     cout << endl;
 
+
     //hybrid sort
-    hybridSort(ar, 0, 11, 3);
+    hybridSort(ar, 0, size-1, 5, hybridKeyComp);
+
+    //number of key comparisons for hybridSort
+    cout << "number of key comparisons for hybrid sort: " << hybridKeyComp << endl;
+
+
+    //merge sort
+    mergeSort(ar, 0, size-1, mergeKeyComp);
+
+    //number of key comparisons for mergeSort
+    cout << "number of key comparisons for merge sort: " << mergeKeyComp << endl;
+
 
     //after sort
-    for (int i : ar)
+    for (long i : ar)
         cout << i << " ";
 
     return 0;
