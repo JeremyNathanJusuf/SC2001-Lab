@@ -2,7 +2,7 @@ import os
 import random
 import numpy as np
 
-folder_path = "./Projects/Project1/datasets"
+folder_path = "./datasets"
 
 if not os.path.exists(folder_path):
     os.makedirs(folder_path)
