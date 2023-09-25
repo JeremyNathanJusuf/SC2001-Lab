@@ -2,3 +2,4 @@ C++prereq
 *.exe
 *.vscode
 *test.cpp
+datasets
