@@ -102,10 +102,10 @@ int main()
 {
     vector<long> result;
     ofstream outputFile("./results/finding_optimal_s.csv", ios::app);
-    for (long size = 1000; size <= 11000; size += 5000) result.push_back(size);
+    for (long size = 1000; size <= 101000; size += 5000) result.push_back(size);
     int rowsize = result.size();
 
-        outputFile << "S values, ";
+        outputFile << "S values,";
 
         for (int i = 0; i < rowsize; ++i)
         {
@@ -128,7 +128,7 @@ int main()
     {
         result.push_back(s);
 
-        for (long size = 1000; size <= 110000; size += 5000)
+        for (long size = 1000; size <= 101000; size += 5000)
         {
             ifstream file(("./datasets/" + to_string(size) + ".txt"));
             
