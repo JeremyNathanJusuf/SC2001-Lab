@@ -4,6 +4,11 @@
 #include <queue>
 #include <time.h>
 #include <chrono>
+#include <fstream>
+#include <vector>
+#include <sstream>
+#include <filesystem>
+#include <ctime>
 
 #define MAX_WEIGHT 100
 using namespace std;
@@ -15,19 +20,25 @@ private:
 
     void fixDown(int i)
     {
-        int l = 2 * i + 1, r = 2 * i + 2;
-        int smallest = i;
 
-        if (l < alist.size() && alist[l].first < alist[smallest].first)
-            smallest = l;
-        if (r < alist.size() && alist[r].first < alist[smallest].first)
-            smallest = r;
+        while (i < alist.size()) {
 
-        if (smallest != i)
-        {
-            swap(alist[i], alist[smallest]);
-            fixDown(smallest);
+            int l = 2 * i + 1, r = 2 * i + 2;
+            int smallest = i;
+            
+            if (l < alist.size() && alist[l].first < alist[smallest].first)
+                smallest = l;
+            if (r < alist.size() && alist[r].first < alist[smallest].first)
+                smallest = r;
+
+            if (smallest != i)
+            {
+                swap(alist[i], alist[smallest]);
+                i = smallest;
+            }
+            else break;
         }
+
     }
 
 public:
@@ -60,7 +71,26 @@ public:
 
         alist[0] = alist.back();
         alist.pop_back();
-        fixDown(0);
+
+        int i = 0;
+        
+        while (i < alist.size()) {
+
+            int l = 2 * i + 1, r = 2 * i + 2;
+            int smallest = i;
+            
+            if (l < alist.size() && alist[l].first < alist[smallest].first)
+                smallest = l;
+            if (r < alist.size() && alist[r].first < alist[smallest].first)
+                smallest = r;
+
+            if (smallest != i)
+            {
+                swap(alist[i], alist[smallest]);
+                i = smallest;
+            }
+            else break;
+        }
     }
 
     bool empty()
@@ -87,7 +117,7 @@ pair<vector<int>, vector<int>> dijkstraMatPQ(vector<vector<int>> adjMat, int sou
             continue;
 
         visited[v - 1] = 1;
-        
+
         for (u = 1; u < adjMat.size() + 1; u++)
         {
             if (adjMat[v - 1][u - 1] != 0 && !visited[u - 1] && dist[v - 1] + adjMat[v - 1][u - 1] < dist[u - 1])
@@ -104,7 +134,8 @@ pair<vector<int>, vector<int>> dijkstraMatPQ(vector<vector<int>> adjMat, int sou
 pair<vector<int>, vector<int>> dijkstraListPQ(vector<vector<pair<int, int>>> adjList, int source)
 {
     vector<int> visited(adjList.size(), 0), dist(adjList.size(), INT_MAX), pi(adjList.size(), -1);
-    PriorityQueue pq;
+    //PriorityQueue pq;
+    priority_queue<pair<int, int>, vector<pair<int,int>>, greater<pair<int, int>>> pq;
     int v, u, w;
 
     dist[source - 1] = 0;
@@ -209,7 +240,7 @@ pair<vector<int>, vector<int>> dijkstraListArray(vector<vector<pair<int, int>>> 
 
 long graphGenerator(vector<vector<int>> &adjMat, vector<vector<pair<int, int>>> &adjList, int V)
 {
-    srand (time(NULL));
+    srand(time(NULL));
     int weight;
     long edges = 0;
 
@@ -226,35 +257,40 @@ long graphGenerator(vector<vector<int>> &adjMat, vector<vector<pair<int, int>>> 
                 adjMat[i][j] = weight;
                 adjMat[j][i] = weight;
 
-                adjList[i].push_back({j+1, weight});
-                adjList[j].push_back({i+1, weight});
+                adjList[i].push_back({j + 1, weight});
+                adjList[j].push_back({i + 1, weight});
             }
-            
         }
     }
 
     return edges;
 }
 
-void displayAdjMatrix(vector<vector<int>> adjMat, int V) {
-    for (int i=0; i<V; i++) {
-        for (int j=0; j<V; j++) cout << adjMat[i][j] << "\t";
+void displayAdjMatrix(vector<vector<int>> adjMat, int V)
+{
+    for (int i = 0; i < V; i++)
+    {
+        for (int j = 0; j < V; j++)
+            cout << adjMat[i][j] << "\t";
         cout << endl;
     }
     cout << endl;
 }
 
-void displayAdjList(vector<vector<pair<int, int>>> adjList, int V) {
-    for (int i=0; i<V; i++) {
-        cout << (i+1) << " ";
-        for (auto u : adjList[i]) 
+void displayAdjList(vector<vector<pair<int, int>>> adjList, int V)
+{
+    for (int i = 0; i < V; i++)
+    {
+        cout << (i + 1) << " ";
+        for (auto u : adjList[i])
             cout << "\t-> {" << u.first << "," << u.second << "} ";
         cout << endl;
     }
     cout << endl;
 }
 
-void displayResults(vector<int> dist, vector<int> pi, int V) {
+void displayResults(vector<int> dist, vector<int> pi, int V)
+{
     for (int i = 0; i < V; i++)
     {
         cout << "Distance of node " << (i + 1) << " from source is:\t" << dist[i] << "\n";
@@ -267,38 +303,62 @@ void displayResults(vector<int> dist, vector<int> pi, int V) {
 }
 int main()
 {
-    int V = 30;
-    vector<vector<int>> adjMat(V, vector<int>(V, 0));
-    vector<vector<pair<int, int>>> adjList(V, vector<pair<int,int>>());
-    
-    long edges = graphGenerator(adjMat, adjList, V);
-    displayAdjList(adjList, V);
-    displayAdjMatrix(adjMat, V);
+    ofstream outputFile("./results/compare.csv", ios::app);
+    vector<int> time_comparisons;
 
-    // Dijkstra Matrix Using Array
-    auto time1_before = std::chrono::high_resolution_clock::now();
-    auto result1 = dijkstraMatArray(adjMat, 1);
-    auto time1_after = std::chrono::high_resolution_clock::now();
-    auto time1_difference = chrono::duration_cast<chrono::nanoseconds>(time1_after - time1_before);
+    for (int V = 1000; V <= 20000; V += 100)
+    {
 
-    auto dist1 = result1.first;
-    auto pi1 = result1.second;
-    displayResults(dist1, pi1, V);  
-    cout << "time elapsed : " << time1_difference.count() << endl;
+        vector<vector<int>> adjMat(V, vector<int>(V, 0));
+        vector<vector<pair<int, int>>> adjList(V, vector<pair<int, int>>());
 
-    // Dijkstra Matrix Using Array
-    auto time2_before = std::chrono::high_resolution_clock::now();
-    auto result2 = dijkstraListPQ(adjList, 1);
-    auto time2_after = std::chrono::high_resolution_clock::now();
-    auto time2_difference = chrono::duration_cast<chrono::nanoseconds>(time2_after - time2_before);
+        long edges = graphGenerator(adjMat, adjList, V);
+        // displayAdjList(adjList, V);
+        // displayAdjMatrix(adjMat, V);
 
-    auto dist2 = result2.first;
-    auto pi2 = result2.second;
-    displayResults(dist2, pi2, V);
-    cout << "time elapsed : " << time2_difference.count() << endl;
-     
-        
-        
-        
+        cout << "V : " << V << endl;
+
+        // Dijkstra Matrix Using Array
+        auto time1_before = std::chrono::high_resolution_clock::now();
+        auto result1 = dijkstraMatArray(adjMat, 1);
+        auto time1_after = std::chrono::high_resolution_clock::now();
+        auto time1_difference = chrono::duration_cast<chrono::nanoseconds>(time1_after - time1_before);
+
+        auto dist1 = result1.first;
+        auto pi1 = result1.second;
+        // displayResults(dist1, pi1, V);
+        cout << "(1) time elapsed : " << time1_difference.count() << endl;
+
+        // Dijkstra List Using Priority Queue
+        auto time2_before = std::chrono::high_resolution_clock::now();
+        auto result2 = dijkstraListPQ(adjList, 1);
+        auto time2_after = std::chrono::high_resolution_clock::now();
+        auto time2_difference = chrono::duration_cast<chrono::nanoseconds>(time2_after - time2_before);
+
+        auto dist2 = result2.first;
+        auto pi2 = result2.second;
+        // displayResults(dist2, pi2, V);
+        cout << "(2) time elapsed : " << time2_difference.count() << endl;
+        cout << endl;
+
+        time_comparisons.push_back(V);
+        time_comparisons.push_back(time1_difference.count());
+        time_comparisons.push_back(time2_difference.count());
+
+        int rowsize = time_comparisons.size();
+
+        for (int i = 0; i < rowsize; ++i)
+        {
+            outputFile << time_comparisons[i];
+            if (i < rowsize - 1)
+            {
+                outputFile << ",";
+            }
+        }
+        outputFile << '\n';
+
+        time_comparisons.clear();
+    }
+
     return 1;
 }
