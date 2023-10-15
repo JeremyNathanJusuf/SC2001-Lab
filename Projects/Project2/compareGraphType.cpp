@@ -78,9 +78,9 @@ public:
     }
 };
 
-pair<vector<long>, vector<long>> dijkstraMatPQ(vector<vector<int>> adjMat, int source)
+pair<vector<long long>, vector<long long>> dijkstraMatPQ(vector<vector<int>> adjMat, int source)
 {
-    vector<long> visited(adjMat.size(), 0), dist(adjMat.size(), INT_MAX), pi(adjMat.size(), -1);
+    vector<long long> visited(adjMat.size(), 0), dist(adjMat.size(), INT_MAX), pi(adjMat.size(), -1);
     PriorityQueue pq;
     int v, u, i;
 
@@ -110,9 +110,9 @@ pair<vector<long>, vector<long>> dijkstraMatPQ(vector<vector<int>> adjMat, int s
     return {dist, pi};
 }
 
-pair<vector<long>, vector<long>> dijkstraListPQ(vector<vector<pair<int, int>>> adjList, int source)
+pair<vector<long long>, vector<long long>> dijkstraListPQ(vector<vector<pair<int, int>>> adjList, int source)
 {
-    vector<long> visited(adjList.size(), 0), dist(adjList.size(), INT_MAX), pi(adjList.size(), -1);
+    vector<long long> visited(adjList.size(), 0), dist(adjList.size(), INT_MAX), pi(adjList.size(), -1);
     // PriorityQueue pq;
     priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
     int v, u, w;
@@ -145,9 +145,9 @@ pair<vector<long>, vector<long>> dijkstraListPQ(vector<vector<pair<int, int>>> a
     return {dist, pi};
 }
 
-pair<vector<long>, vector<long>> dijkstraMatArray(vector<vector<int>> adjMat, int source)
+pair<vector<long long>, vector<long long>> dijkstraMatArray(vector<vector<int>> adjMat, int source)
 {
-    vector<long> visited(adjMat.size(), 0), dist(adjMat.size(), INT_MAX), pi(adjMat.size(), -1);
+    vector<long long> visited(adjMat.size(), 0), dist(adjMat.size(), INT_MAX), pi(adjMat.size(), -1);
     int v, u, i;
     int minDist, minVertex;
 
@@ -179,9 +179,9 @@ pair<vector<long>, vector<long>> dijkstraMatArray(vector<vector<int>> adjMat, in
     return {dist, pi};
 }
 
-pair<vector<long>, vector<long>> dijkstraListArray(vector<vector<pair<int, int>>> adjList, int source)
+pair<vector<long long>, vector<long long>> dijkstraListArray(vector<vector<pair<int, int>>> adjList, int source)
 {
-    vector<long> visited(adjList.size(), 0), dist(adjList.size(), INT_MAX), pi(adjList.size(), -1);
+    vector<long long> visited(adjList.size(), 0), dist(adjList.size(), INT_MAX), pi(adjList.size(), -1);
     int v, u, w, i;
     int minDist, minVertex;
 
@@ -216,18 +216,29 @@ pair<vector<long>, vector<long>> dijkstraListArray(vector<vector<pair<int, int>>
     return {dist, pi};
 }
 
-void graphGenerator(vector<vector<int>> &adjMat, vector<vector<pair<int, int>>> &adjList, int V, long edges)
+void graphGenerator(vector<vector<int>> &adjMat, vector<vector<pair<int, int>>> &adjList, int V, long long edges)
 {
     srand(time(NULL));
     int weight;
     int i, j, k;
+    vector<int> prev, visited(V, 0);
+    int size = 1;
+
+    prev.push_back(0);
+    visited[0] = 1;
 
     for (k = 0; k < edges; k++)
     {
         do {
-            i = rand() % V;
+            i = prev[rand() % size];
             j = rand() % V;
         } while (adjMat[i][j] != 0 || i == j);
+
+        if (visited[j] == 0) {
+            prev.push_back(j);
+            visited[j] = 1;
+            size++;
+        }
 
         weight = rand() % MAX_WEIGHT + 1;
 
@@ -262,7 +273,7 @@ void displayAdjList(vector<vector<pair<int, int>>> adjList, int V)
     cout << endl;
 }
 
-void displayResults(vector<int> dist, vector<int> pi, int V)
+void displayResults(vector<long long> dist, vector<long long> pi, int V)
 {
     for (int i = 0; i < V; i++)
     {
@@ -277,12 +288,12 @@ void displayResults(vector<int> dist, vector<int> pi, int V)
 int main()
 {
     // change this V value for different graphs, dont forget to also clean the CSV file
-    int V = 500;
+    int V = 150;
 
     ofstream outputFile("./results/compareSparsity.csv", ios::app);
-    vector<long> time_comparisons;
+    vector<long long> time_comparisons;
 
-    for (long edges = 100; edges <= V*(V-1)/2; edges += 100)
+    for (long long edges = 100; edges <= (V-1)*V/2; edges += 100)
     {
         vector<vector<int>> adjMat(V, vector<int>(V, 0));
         vector<vector<pair<int, int>>> adjList(V, vector<pair<int, int>>());
@@ -292,12 +303,11 @@ int main()
         // displayAdjMatrix(adjMat, V);
 
         cout << "number of edges : " << edges << endl;
-
         // Dijkstra Matrix Using Array
         auto time1_before = std::chrono::high_resolution_clock::now();
         auto result1 = dijkstraMatPQ(adjMat, 1);
         auto time1_after = std::chrono::high_resolution_clock::now();
-        auto time1_difference = chrono::duration_cast<chrono::nanoseconds>(time1_after - time1_before);
+        auto time1_difference = chrono::duration_cast<chrono::microseconds>(time1_after - time1_before);
         auto dist1 = result1.first;
         auto pi1 = result1.second;
         // displayResults(dist1, pi1, V);
@@ -307,7 +317,7 @@ int main()
         auto time2_before = std::chrono::high_resolution_clock::now();
         auto result2 = dijkstraListPQ(adjList, 1);
         auto time2_after = std::chrono::high_resolution_clock::now();
-        auto time2_difference = chrono::duration_cast<chrono::nanoseconds>(time2_after - time2_before);
+        auto time2_difference = chrono::duration_cast<chrono::microseconds>(time2_after - time2_before);
 
         auto dist2 = result2.first;
         auto pi2 = result2.second;

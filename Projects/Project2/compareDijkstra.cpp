@@ -76,9 +76,9 @@ public:
     }
 };
 
-pair<vector<int>, vector<int>> dijkstraMatPQ(vector<vector<int>> adjMat, int source)
+pair<vector<long long>, vector<long long>> dijkstraMatPQ(vector<vector<int>> adjMat, int source)
 {
-    vector<int> visited(adjMat.size(), 0), dist(adjMat.size(), INT_MAX), pi(adjMat.size(), -1);
+    vector<long long> visited(adjMat.size(), 0), dist(adjMat.size(), INT_MAX), pi(adjMat.size(), -1);
     PriorityQueue pq;
     int v, u, i;
 
@@ -108,11 +108,11 @@ pair<vector<int>, vector<int>> dijkstraMatPQ(vector<vector<int>> adjMat, int sou
     return {dist, pi};
 }
 
-pair<vector<int>, vector<int>> dijkstraListPQ(vector<vector<pair<int, int>>> adjList, int source)
+pair<vector<long long>, vector<long long>> dijkstraListPQ(vector<vector<pair<int, int>>> adjList, int source)
 {
-    vector<int> visited(adjList.size(), 0), dist(adjList.size(), INT_MAX), pi(adjList.size(), -1);
-    //PriorityQueue pq;
-    priority_queue<pair<int, int>, vector<pair<int,int>>, greater<pair<int, int>>> pq;
+    vector<long long> visited(adjList.size(), 0), dist(adjList.size(), INT_MAX), pi(adjList.size(), -1);
+    // PriorityQueue pq;
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
     int v, u, w;
 
     dist[source - 1] = 0;
@@ -143,14 +143,13 @@ pair<vector<int>, vector<int>> dijkstraListPQ(vector<vector<pair<int, int>>> adj
     return {dist, pi};
 }
 
-pair<vector<int>, vector<int>> dijkstraMatArray(vector<vector<int>> adjMat, int source)
+pair<vector<long long>, vector<long long>> dijkstraMatArray(vector<vector<int>> adjMat, int source)
 {
-    vector<int> visited(adjMat.size(), 0), dist(adjMat.size(), INT_MAX), pi(adjMat.size(), -1);
+    vector<long long> visited(adjMat.size(), 0), dist(adjMat.size(), INT_MAX), pi(adjMat.size(), -1);
     int v, u, i;
     int minDist, minVertex;
 
     dist[source - 1] = 0;
-
     for (i = 0; i < adjMat.size(); i++)
     {
         minDist = INT_MAX;
@@ -178,9 +177,9 @@ pair<vector<int>, vector<int>> dijkstraMatArray(vector<vector<int>> adjMat, int 
     return {dist, pi};
 }
 
-pair<vector<int>, vector<int>> dijkstraListArray(vector<vector<pair<int, int>>> adjList, int source)
+pair<vector<long long>, vector<long long>> dijkstraListArray(vector<vector<pair<int, int>>> adjList, int source)
 {
-    vector<int> visited(adjList.size(), 0), dist(adjList.size(), INT_MAX), pi(adjList.size(), -1);
+    vector<long long> visited(adjList.size(), 0), dist(adjList.size(), INT_MAX), pi(adjList.size(), -1);
     int v, u, w, i;
     int minDist, minVertex;
 
@@ -215,32 +214,38 @@ pair<vector<int>, vector<int>> dijkstraListArray(vector<vector<pair<int, int>>> 
     return {dist, pi};
 }
 
-long graphGenerator(vector<vector<int>> &adjMat, vector<vector<pair<int, int>>> &adjList, int V)
+void graphGenerator(vector<vector<int>> &adjMat, vector<vector<pair<int, int>>> &adjList, int V, long long edges)
 {
     srand(time(NULL));
     int weight;
-    long edges = 0;
+    int i, j, k;
+    vector<int> prev, visited(V, 0);
+    int size = 1;
 
-    for (int i = 0; i < V - 1; i++)
+    prev.push_back(0);
+    visited[0] = 1;
+
+    for (k = 0; k < edges; k++)
     {
-        for (int j = i + 1; j < V; j++)
-        {
+        do {
+            i = prev[rand() % size];
+            j = rand() % V;
+        } while (adjMat[i][j] != 0 || i == j);
 
-            if (rand() % 3 != 0)
-            {
-                weight = rand() % MAX_WEIGHT + 1;
-                edges++;
-
-                adjMat[i][j] = weight;
-                adjMat[j][i] = weight;
-
-                adjList[i].push_back({j + 1, weight});
-                adjList[j].push_back({i + 1, weight});
-            }
+        if (visited[j] == 0) {
+            prev.push_back(j);
+            visited[j] = 1;
+            size++;
         }
-    }
 
-    return edges;
+        weight = rand() % MAX_WEIGHT + 1;
+
+        adjMat[i][j] = weight;
+        adjMat[j][i] = weight;
+
+        adjList[i].push_back({j + 1, weight});
+        adjList[j].push_back({i + 1, weight});
+    }
 }
 
 void displayAdjMatrix(vector<vector<int>> adjMat, int V)
@@ -266,7 +271,7 @@ void displayAdjList(vector<vector<pair<int, int>>> adjList, int V)
     cout << endl;
 }
 
-void displayResults(vector<int> dist, vector<int> pi, int V)
+void displayResults(vector<long long> dist, vector<long long> pi, int V)
 {
     for (int i = 0; i < V; i++)
     {
@@ -278,10 +283,11 @@ void displayResults(vector<int> dist, vector<int> pi, int V)
     }
     cout << endl;
 }
+
 int main()
 {
     ofstream outputFile("./results/compare.csv", ios::app);
-    vector<int> time_comparisons;
+    vector<long long> time_comparisons;
 
     for (int V = 1000; V <= 20000; V += 100)
     {
@@ -289,7 +295,7 @@ int main()
         vector<vector<int>> adjMat(V, vector<int>(V, 0));
         vector<vector<pair<int, int>>> adjList(V, vector<pair<int, int>>());
 
-        long edges = graphGenerator(adjMat, adjList, V);
+        graphGenerator(adjMat, adjList, V, rand() % (V*(V-1)/2) + 1);
         // displayAdjList(adjList, V);
         // displayAdjMatrix(adjMat, V);
 
@@ -299,7 +305,7 @@ int main()
         auto time1_before = std::chrono::high_resolution_clock::now();
         auto result1 = dijkstraMatArray(adjMat, 1);
         auto time1_after = std::chrono::high_resolution_clock::now();
-        auto time1_difference = chrono::duration_cast<chrono::nanoseconds>(time1_after - time1_before);
+        auto time1_difference = chrono::duration_cast<chrono::microseconds>(time1_after - time1_before);
 
         auto dist1 = result1.first;
         auto pi1 = result1.second;
@@ -310,7 +316,7 @@ int main()
         auto time2_before = std::chrono::high_resolution_clock::now();
         auto result2 = dijkstraListPQ(adjList, 1);
         auto time2_after = std::chrono::high_resolution_clock::now();
-        auto time2_difference = chrono::duration_cast<chrono::nanoseconds>(time2_after - time2_before);
+        auto time2_difference = chrono::duration_cast<chrono::microseconds>(time2_after - time2_before);
 
         auto dist2 = result2.first;
         auto pi2 = result2.second;
