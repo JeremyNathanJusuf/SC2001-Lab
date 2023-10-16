@@ -288,62 +288,77 @@ void displayResults(vector<long long> dist, vector<long long> pi, int V)
 int main()
 {
     // change this V value for different graphs, dont forget to also clean the CSV file
-    int V = 150;
+    int V = 500;
 
     ofstream outputFile("./results/compareSparsity.csv", ios::app);
     vector<long long> time_comparisons;
+    unsigned long long avg1=0; unsigned long long avg2=0;
 
     for (long long edges = 100; edges <= (V-1)*V/2; edges += 100)
-    {
-        vector<vector<int>> adjMat(V, vector<int>(V, 0));
-        vector<vector<pair<int, int>>> adjList(V, vector<pair<int, int>>());
+    {   
+        for (int k=0; k<10; k++) {
 
-        graphGenerator(adjMat, adjList, V, edges);
-        // displayAdjList(adjList, V);
-        // displayAdjMatrix(adjMat, V);
+            vector<vector<int>> adjMat(V, vector<int>(V, 0));
+            vector<vector<pair<int, int>>> adjList(V, vector<pair<int, int>>());
 
-        cout << "number of edges : " << edges << endl;
-        // Dijkstra Matrix Using Array
-        auto time1_before = std::chrono::high_resolution_clock::now();
-        auto result1 = dijkstraMatPQ(adjMat, 1);
-        auto time1_after = std::chrono::high_resolution_clock::now();
-        auto time1_difference = chrono::duration_cast<chrono::microseconds>(time1_after - time1_before);
-        auto dist1 = result1.first;
-        auto pi1 = result1.second;
-        // displayResults(dist1, pi1, V);
-        cout << "(1) time elapsed : " << time1_difference.count() << endl;
+            graphGenerator(adjMat, adjList, V, edges);
+            // displayAdjList(adjList, V);
+            // displayAdjMatrix(adjMat, V);
 
-        // Dijkstra List Using Priority Queue
-        auto time2_before = std::chrono::high_resolution_clock::now();
-        auto result2 = dijkstraListPQ(adjList, 1);
-        auto time2_after = std::chrono::high_resolution_clock::now();
-        auto time2_difference = chrono::duration_cast<chrono::microseconds>(time2_after - time2_before);
+            cout << "number of edges : " << edges << endl;
+            cout << "trial number : " << (k+1) << endl;
+            // Dijkstra Matrix Using Array
+            auto time1_before = std::chrono::high_resolution_clock::now();
+            auto result1 = dijkstraMatPQ(adjMat, 1);
+            auto time1_after = std::chrono::high_resolution_clock::now();
+            auto time1_difference = chrono::duration_cast<chrono::microseconds>(time1_after - time1_before);
 
-        auto dist2 = result2.first;
-        auto pi2 = result2.second;
-        // displayResults(dist2, pi2, V);
-        cout << "(2) time elapsed : " << time2_difference.count() << endl;
-        cout << endl;
+            auto dist1 = result1.first;
+            auto pi1 = result1.second;
+            // displayResults(dist1, pi1, V);
+            cout << "(1) time elapsed : " << time1_difference.count() << endl;
 
-        time_comparisons.push_back(edges);
-        time_comparisons.push_back(time1_difference.count());
-        time_comparisons.push_back(time2_difference.count());
+            // Dijkstra List Using Priority Queue
+            auto time2_before = std::chrono::high_resolution_clock::now();
+            auto result2 = dijkstraListPQ(adjList, 1);
+            auto time2_after = std::chrono::high_resolution_clock::now();
+            auto time2_difference = chrono::duration_cast<chrono::microseconds>(time2_after - time2_before);
 
-        int rowsize = time_comparisons.size();
+            auto dist2 = result2.first;
+            auto pi2 = result2.second;
+            // displayResults(dist2, pi2, V);
+            cout << "(2) time elapsed : " << time2_difference.count() << endl;
+            cout << endl;
 
-        for (int i = 0; i < rowsize; ++i)
-        {
-            outputFile << time_comparisons[i];
-            if (i < rowsize - 1)
-            {
-                outputFile << ",";
-            }
+            avg1 += time1_difference.count();
+            avg2 += time2_difference.count();
+
+            
+            adjMat.clear();
+            adjList.clear();
         }
-        outputFile << '\n';
+            avg1 /= 10;
+            avg2 /= 10;
 
-        time_comparisons.clear();
-        adjMat.clear();
-        adjList.clear();
+            time_comparisons.push_back(edges);
+            time_comparisons.push_back(avg1);
+            time_comparisons.push_back(avg2);
+
+            int rowsize = time_comparisons.size();
+
+            for (int i = 0; i < rowsize; ++i)
+            {
+                outputFile << time_comparisons[i];
+                if (i < rowsize - 1)
+                {
+                    outputFile << ",";
+                }
+            }
+            outputFile << '\n';
+
+            avg1 = 0;
+            avg2 = 0;
+            time_comparisons.clear();
     }
 
     return 1;
